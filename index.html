@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flooring Condition Report - FloorsIQ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4A6741;
+            --primary-light: #6B8E63;
+            --accent: #B8860B;
+            --warm-bg: #FAF8F5;
+            --card-bg: #FFFFFF;
+            --text-primary: #2D3436;
+            --text-secondary: #636E72;
+            --border: #E8E4DF;
+        }
+        .dark {
+            --primary: #7BA370;
+            --primary-light: #9BC090;
+            --accent: #DAA520;
+            --warm-bg: #1A1D1E;
+            --card-bg: #252A2C;
+            --text-primary: #F0EFED;
+            --text-secondary: #A0A4A8;
+            --border: #3A3F42;
+        }
+        * { font-family: 'Inter', sans-serif; }
+        body {
+            background: var(--warm-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+        .font-display { font-family: 'Playfair Display', serif; }
+        .bg-card { background: var(--card-bg); }
+        .text-primary-color { color: var(--primary); }
+        .text-secondary-color { color: var(--text-secondary); }
+        .border-custom { border-color: var(--border); }
+        .bg-primary { background: var(--primary); }
+        .bg-primary-light { background: var(--primary-light); }
+        .accent-color { color: var(--accent); }
+        .bg-accent { background: var(--accent); }
+
+        .progress-step { transition: all 0.4s ease; }
+        .progress-step.active .step-circle {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        }
+        .progress-step.completed .step-circle {
+            background: var(--primary);
+            color: white;
+        }
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--border);
+            color: var(--text-secondary);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .progress-line {
+            height: 3px;
+            background: var(--border);
+            flex: 1;
+            margin: 0 8px;
+            position: relative;
+        }
+        .progress-line::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: var(--primary);
+            width: 0;
+            transition: width 0.4s ease;
+        }
+        .progress-step.completed + .progress-line::after,
+        .progress-line.filled::after {
+            width: 100%;
+        }
+
+        .form-section { animation: fadeSlideIn 0.5s ease forwards; }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .photo-upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .photo-upload-zone:hover, .photo-upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(74, 103, 65, 0.05);
+        }
+        .dark .photo-upload-zone:hover, .dark .photo-upload-zone.dragover {
+            background: rgba(123, 163, 112, 0.1);
+        }
+
+        .photo-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+        }
+
+        .report-section {
+            padding: 24px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            background: var(--card-bg);
+            border-left: 4px solid var(--primary);
+        }
+        .report-section h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .report-section h3 {
+            font-weight: 600;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+        .report-section p, .report-section li {
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        .report-section ul {
+            list-style: disc;
+            padding-left: 20px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 103, 65, 0.1);
+        }
+        .dark .input-field:focus {
+            box-shadow: 0 0 0 3px rgba(123, 163, 112, 0.2);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .loading-shimmer {
+            background: linear-gradient(90deg, var(--border) 25%, var(--card-bg) 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .fade-in { animation: fadeIn 0.6s ease forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .stagger-1 { animation-delay: 0.1s; opacity: 0; }
+        .stagger-2 { animation-delay: 0.2s; opacity: 0; }
+        .stagger-3 { animation-delay: 0.3s; opacity: 0; }
+        .stagger-4 { animation-delay: 0.4s; opacity: 0; }
+
+        .disclaimer-box {
+            background: rgba(74, 103, 65, 0.08);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 16px;
+        }
+        .dark .disclaimer-box {
+            background: rgba(123, 163, 112, 0.1);
+        }
+
+        .paywall-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .paywall-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            max-width: 440px;
+            width: 100%;
+            padding: 40px;
+            text-align: center;
+            animation: scaleIn 0.3s ease;
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .price-tag {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .price-tag span {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+        .feature-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+            padding: 8px 0;
+        }
+        .feature-check i {
+            color: var(--primary);
+        }
+
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 200px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .dropdown-item:hover {
+            background: rgba(74, 103, 65, 0.1);
+        }
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text-primary);
+            color: var(--card-bg);
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-weight: 500;
+            z-index: 200;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media print {
+            body { background: white !important; }
+            .no-print { display: none !important; }
+            .report-section { break-inside: avoid; }
+        }
+
+        .select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        .select-option {
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .select-option:hover {
+            border-color: var(--primary-light);
+        }
+        .select-option.selected {
+            border-color: var(--primary);
+            background: rgba(74, 103, 65, 0.08);
+        }
+        .dark .select-option.selected {
+            background: rgba(123, 163, 112, 0.15);
+        }
+        .select-option i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: block;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="min-h-screen">
+        <!-- Paywall Modal -->
+        <div id="paywallModal" class="paywall-overlay hidden">
+            <div class="paywall-card">
+                <div class="w-16 h-16 rounded-full bg-primary mx-auto mb-4 flex items-center justify-center">
+                    <i class="fas fa-crown text-2xl text-white"></i>
+                </div>
+                <h2 class="font-display text-2xl font-bold mb-2">Unlock Full Report</h2>
+                <p class="text-secondary-color mb-6">Get a professional flooring analysis with actionable insights</p>
+
+                <div class="price-tag mb-6" id="priceDisplay">
+                    $7.99 <span>per report</span>
+                </div>
+
+                <div class="mb-6 px-4">
+                    <div class="feature-check">
+                        <i class="fas fa-check-circle"></i>
+                        <span>AI-powered photo analysis</span>
+                    </div>
+                    <div class="feature-check">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Detailed condition assessment</span>
+                    </div>
+                    <div class="feature-check">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Professional recommendations</span>
+                    </div>
+                    <div class="feature-check">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Printable PDF-ready report</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <a id="purchaseLink" href="https://buy.stripe.com/9B68wP05M6AhbA4f9m1wY00" target="_blank" class="btn-primary w-full justify-center">
+                        <i class="fas fa-lock"></i>
+                        Purchase Access Code
+                    </a>
+                    <p class="text-xs text-secondary-color">Already have a code?</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="accessCodeInput" class="input-field flex-1" placeholder="Enter access code">
+                        <button onclick="validateAccessCode()" class="btn-primary px-4">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <p id="codeError" class="text-red-500 text-sm hidden">Invalid access code</p>
+                </div>
+
+                <button onclick="closePaywall()" class="mt-6 text-sm text-secondary-color hover:text-primary-color">
+                    ← Go back
+                </button>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="bg-card border-b border-custom py-4 px-6 no-print">
+            <div class="max-w-4xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                        <i class="fas fa-home text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-display text-xl font-semibold text-primary-color">FloorsIQ</h1>
+                        <p class="text-xs text-secondary-color">Flooring Condition Analysis</p>
+                    </div>
+                </div>
+                <div id="headerActions" class="hidden">
+                    <button onclick="startOver()" class="text-sm text-secondary-color hover:text-primary-color transition">
+                        <i class="fas fa-redo mr-2"></i>New Report
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-4xl mx-auto px-4 py-8">
+            <!-- Welcome Screen -->
+            <div id="welcomeScreen" class="text-center py-12 fade-in">
+                <div class="w-20 h-20 rounded-full bg-primary mx-auto mb-6 flex items-center justify-center stagger-1 fade-in">
+                    <i class="fas fa-clipboard-check text-3xl text-white"></i>
+                </div>
+                <h2 class="font-display text-3xl md:text-4xl font-bold mb-4 stagger-2 fade-in">Flooring Condition Report</h2>
+                <p class="text-secondary-color text-lg max-w-2xl mx-auto mb-8 stagger-3 fade-in">
+                    Get a professional analysis of your flooring concerns. Answer a few questions and upload photos to receive a detailed, easy-to-understand report.
+                </p>
+                <button onclick="startQuestionnaire()" class="btn-primary text-lg stagger-4 fade-in">
+                    <i class="fas fa-arrow-right"></i>
+                    Begin Assessment
+                </button>
+                <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-left stagger-4 fade-in">
+                    <div class="bg-card p-6 rounded-xl border border-custom">
+                        <i class="fas fa-edit text-primary-color text-2xl mb-3"></i>
+                        <h3 class="font-semibold mb-2">Simple Questions</h3>
+                        <p class="text-sm text-secondary-color">Guided questionnaire to capture all relevant details about your flooring issue.</p>
+                    </div>
+                    <div class="bg-card p-6 rounded-xl border border-custom">
+                        <i class="fas fa-camera text-primary-color text-2xl mb-3"></i>
+                        <h3 class="font-semibold mb-2">Photo Analysis</h3>
+                        <p class="text-sm text-secondary-color">Upload photos for visual assessment of visible conditions.</p>
+                    </div>
+                    <div class="bg-card p-6 rounded-xl border border-custom">
+                        <i class="fas fa-file-alt text-primary-color text-2xl mb-3"></i>
+                        <h3 class="font-semibold mb-2">Professional Report</h3>
+                        <p class="text-sm text-secondary-color">Receive a clear, beautifully formatted analysis you can share.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questionnaire -->
+            <div id="questionnaireScreen" class="hidden">
+                <div class="flex items-center justify-center mb-10">
+                    <div id="progressBar" class="flex items-center w-full max-w-lg"></div>
+                </div>
+                <div id="formContainer" class="bg-card rounded-2xl border border-custom p-6 md:p-10"></div>
+                <div class="flex justify-between mt-6">
+                    <button id="prevBtn" onclick="prevStep()" class="btn-secondary hidden">
+                        <i class="fas fa-arrow-left mr-2"></i>Back
+                    </button>
+                    <div class="flex-1"></div>
+                    <button id="nextBtn" onclick="nextStep()" class="btn-primary">
+                        Continue<i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Screen -->
+            <div id="loadingScreen" class="hidden text-center py-16">
+                <div class="w-20 h-20 rounded-full bg-primary mx-auto mb-6 flex items-center justify-center animate-pulse">
+                    <i class="fas fa-search text-3xl text-white"></i>
+                </div>
+                <h2 class="font-display text-2xl font-bold mb-4">Analyzing Your Flooring</h2>
+                <p class="text-secondary-color mb-8">Please wait while we generate your personalized report...</p>
+                <div class="max-w-md mx-auto space-y-4">
+                    <div class="h-4 rounded loading-shimmer"></div>
+                    <div class="h-4 rounded loading-shimmer w-4/5 mx-auto"></div>
+                    <div class="h-4 rounded loading-shimmer w-3/5 mx-auto"></div>
+                </div>
+            </div>
+
+            <!-- Report Screen -->
+            <div id="reportScreen" class="hidden">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 no-print">
+                    <div>
+                        <h2 class="font-display text-2xl font-bold">Your Flooring Report</h2>
+                        <p class="text-secondary-color">Generated on <span id="reportDate"></span></p>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="dropdown">
+                            <button onclick="toggleDropdown()" class="btn-secondary" id="exportBtn">
+                                <i class="fas fa-download mr-2"></i>Export<i class="fas fa-chevron-down ml-2 text-xs"></i>
+                            </button>
+                            <div class="dropdown-menu" id="exportDropdown">
+                                <div class="dropdown-item" id="shareOption" onclick="shareReport()" style="display: none;">
+                                    <i class="fas fa-share-alt"></i>
+                                    <div>
+                                        <div class="font-medium">Share Report</div>
+                                        <div class="text-xs text-secondary-color">Share via apps</div>
+                                    </div>
+                                </div>
+                                <div class="dropdown-item" id="pdfOption" onclick="downloadPDF()">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <div>
+                                        <div class="font-medium">Download PDF</div>
+                                        <div class="text-xs text-secondary-color">Save as PDF file</div>
+                                    </div>
+                                </div>
+                                <div class="dropdown-item" onclick="window.print(); closeDropdown()">
+                                    <i class="fas fa-print"></i>
+                                    <div>
+                                        <div class="font-medium">Print / Save PDF</div>
+                                        <div class="text-xs text-secondary-color">Use browser print dialog</div>
+                                    </div>
+                                </div>
+                                <div class="dropdown-item" onclick="copyReportText()">
+                                    <i class="fas fa-copy"></i>
+                                    <div>
+                                        <div class="font-medium">Copy Text</div>
+                                        <div class="text-xs text-secondary-color">Copy report to clipboard</div>
+                                    </div>
+                                </div>
+                                <a class="dropdown-item" href="#" onclick="emailReport()">
+                                    <i class="fas fa-envelope"></i>
+                                    <div>
+                                        <div class="font-medium">Email Report</div>
+                                        <div class="text-xs text-secondary-color">Send via email</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                        <button onclick="startOver()" class="btn-primary">
+                            <i class="fas fa-plus mr-2"></i>New Report
+                        </button>
+                    </div>
+                </div>
+
+                <div id="photoGallery" class="bg-card rounded-xl border border-custom p-6 mb-6 hidden">
+                    <h3 class="font-semibold mb-4 flex items-center gap-2">
+                        <i class="fas fa-images text-primary-color"></i>
+                        Submitted Photos
+                    </h3>
+                    <div id="galleryImages" class="flex flex-wrap gap-4"></div>
+                </div>
+
+                <div id="reportContent" class="prose max-w-none"></div>
+
+                <div class="disclaimer-box mt-8">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-primary-color mt-1"></i>
+                        <div>
+                            <p class="font-semibold mb-1">Disclaimer</p>
+                            <p class="text-sm text-secondary-color">
+                                This report is based solely on the information and photos provided by the homeowner and is intended for educational purposes only. It does not replace an on-site inspection by a qualified flooring professional. Conditions not visible or disclosed may affect the findings.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Screen -->
+            <div id="errorScreen" class="hidden text-center py-16">
+                <div class="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/30 mx-auto mb-6 flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-3xl text-red-500"></i>
+                </div>
+                <h2 class="font-display text-2xl font-bold mb-4">Something Went Wrong</h2>
+                <p id="errorMessage" class="text-secondary-color mb-8">Unable to generate the report. Please try again.</p>
+                <button onclick="retryGeneration()" class="btn-primary">
+                    <i class="fas fa-redo mr-2"></i>Try Again
+                </button>
+            </div>
+        </main>
+
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            document.documentElement.classList.toggle('dark', event.matches);
+        });
+
+        // ============================================
+        // PAYMENT CONFIGURATION - EDIT THESE VALUES
+        // ============================================
+        const PAYMENT_CONFIG = {
+            enabled: true,
+            price: '$7.99',
+            validCodes: ['FLOOR2170'],
+            singleUse: false,
+            purchaseLink: 'https://buy.stripe.com/9B68wP05M6AhbA4f9m1wY00'
+        };
+
+        let hasValidAccess = false;
+
+        const formData = {
+            flooringType: '',
+            floorAge: '',
+            location: '',
+            problemDescription: '',
+            issueStart: '',
+            progression: '',
+            waterEvents: '',
+            weatherChanges: '',
+            renovations: '',
+            temperature: '',
+            humidity: '',
+            additionalNotes: '',
+            photos: []
+        };
+
+        let currentStep = 0;
+        const totalSteps = 5;
+
+        const steps = [
+            { title: 'Flooring Basics', subtitle: 'Tell us about your flooring', icon: 'fa-layer-group' },
+            { title: 'What You\'re Seeing', subtitle: 'Describe the issue', icon: 'fa-eye' },
+            { title: 'Recent Events', subtitle: 'Any relevant changes?', icon: 'fa-calendar-alt' },
+            { title: 'Photos', subtitle: 'Upload images of the issue', icon: 'fa-camera' },
+            { title: 'Additional Info', subtitle: 'Optional details', icon: 'fa-info-circle' }
+        ];
+
+        const flooringTypes = [
+            { id: 'hardwood', label: 'Hardwood', icon: 'fa-tree' },
+            { id: 'engineered', label: 'Engineered Wood', icon: 'fa-bars' },
+            { id: 'laminate', label: 'Laminate', icon: 'fa-th-large' },
+            { id: 'vinyl', label: 'Vinyl/LVP/LVT', icon: 'fa-square' },
+            { id: 'tile', label: 'Tile', icon: 'fa-chess-board' },
+            { id: 'carpet', label: 'Carpet', icon: 'fa-rug' }
+        ];
+
+        function startQuestionnaire() {
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('questionnaireScreen').classList.remove('hidden');
+            renderProgress();
+            renderStep();
+        }
+
+        function renderProgress() {
+            const container = document.getElementById('progressBar');
+            container.innerHTML = steps.map((step, index) => `
+                <div class="progress-step ${index < currentStep ? 'completed' : ''} ${index === currentStep ? 'active' : ''}" data-step="${index}">
+                    <div class="step-circle">
+                        ${index < currentStep ? '<i class="fas fa-check text-sm"></i>' : index + 1}
+                    </div>
+                </div>
+                ${index < steps.length - 1 ? `<div class="progress-line ${index < currentStep ? 'filled' : ''}"></div>` : ''}
+            `).join('');
+        }
+
+        function renderStep() {
+            const container = document.getElementById('formContainer');
+            const step = steps[currentStep];
+
+            let content = `
+                <div class="form-section">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <i class="fas ${step.icon} text-primary-color text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-display text-xl font-semibold">${step.title}</h3>
+                            <p class="text-secondary-color text-sm">${step.subtitle}</p>
+                        </div>
+                    </div>
+            `;
+
+            switch(currentStep) {
+                case 0: content += renderFlooringBasics(); break;
+                case 1: content += renderIssueDescription(); break;
+                case 2: content += renderRecentEvents(); break;
+                case 3: content += renderPhotoUpload(); break;
+                case 4: content += renderAdditionalInfo(); break;
+            }
+
+            content += '</div>';
+            container.innerHTML = content;
+
+            document.getElementById('prevBtn').classList.toggle('hidden', currentStep === 0);
+            document.getElementById('nextBtn').innerHTML = currentStep === totalSteps - 1
+                ? 'Generate Report<i class="fas fa-magic ml-2"></i>'
+                : 'Continue<i class="fas fa-arrow-right ml-2"></i>';
+
+            if (currentStep === 3) initPhotoUpload();
+        }
+
+        function renderFlooringBasics() {
+            return `
+                <div class="space-y-6">
+                    <div>
+                        <label class="block font-medium mb-3">What type of flooring do you have?</label>
+                        <div class="select-grid">
+                            ${flooringTypes.map(type => `
+                                <div class="select-option ${formData.flooringType === type.id ? 'selected' : ''}" onclick="selectFlooringType('${type.id}')">
+                                    <i class="fas ${type.icon}"></i>
+                                    <span class="text-sm font-medium">${type.label}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-2">Approximately how old is the floor?</label>
+                        <input type="text" class="input-field" placeholder="e.g., 5 years, 10+ years, new installation"
+                            value="${formData.floorAge}" onchange="formData.floorAge = this.value">
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-2">Where is the issue located?</label>
+                        <input type="text" class="input-field" placeholder="e.g., Living room, kitchen near sink, hallway"
+                            value="${formData.location}" onchange="formData.location = this.value">
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderIssueDescription() {
+            return `
+                <div class="space-y-6">
+                    <div>
+                        <label class="block font-medium mb-2">What changes or problems have you noticed?</label>
+                        <textarea class="input-field min-h-[120px]" placeholder="Describe what you're seeing - warping, gaps, discoloration, lifting, etc."
+                            onchange="formData.problemDescription = this.value">${formData.problemDescription}</textarea>
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-2">When did you first notice the issue?</label>
+                        <input type="text" class="input-field" placeholder="e.g., Last week, 3 months ago, after winter"
+                            value="${formData.issueStart}" onchange="formData.issueStart = this.value">
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-2">Has it stayed the same or changed over time?</label>
+                        <select class="input-field" onchange="formData.progression = this.value">
+                            <option value="">Select an option</option>
+                            <option value="same" ${formData.progression === 'same' ? 'selected' : ''}>Stayed the same</option>
+                            <option value="worse" ${formData.progression === 'worse' ? 'selected' : ''}>Getting worse</option>
+                            <option value="better" ${formData.progression === 'better' ? 'selected' : ''}>Getting better</option>
+                            <option value="varies" ${formData.progression === 'varies' ? 'selected' : ''}>Varies / changes</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRecentEvents() {
+            return `
+                <div class="space-y-6">
+                    <div>
+                        <label class="block font-medium mb-2">Any water leaks, spills, or flooding?</label>
+                        <textarea class="input-field min-h-[80px]" placeholder="Describe any water-related events, even small ones"
+                            onchange="formData.waterEvents = this.value">${formData.waterEvents}</textarea>
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-2">Any recent weather changes or humidity issues?</label>
+                        <textarea class="input-field min-h-[80px]" placeholder="e.g., Very dry winter, humid summer, AC issues"
+                            onchange="formData.weatherChanges = this.value">${formData.weatherChanges}</textarea>
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-2">Any renovations or HVAC changes?</label>
+                        <textarea class="input-field min-h-[80px]" placeholder="e.g., New windows, HVAC repair, nearby construction"
+                            onchange="formData.renovations = this.value">${formData.renovations}</textarea>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPhotoUpload() {
+            return `
+                <div class="space-y-6">
+                    <div id="photoUploadZone" class="photo-upload-zone">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-primary-color mb-4"></i>
+                        <p class="font-medium mb-2">Drag & drop photos here</p>
+                        <p class="text-sm text-secondary-color mb-4">or click to browse</p>
+                        <input type="file" id="photoInput" accept="image/*" multiple class="hidden" onchange="handlePhotoSelect(event)">
+                        <button type="button" onclick="document.getElementById('photoInput').click()" class="btn-secondary text-sm">
+                            <i class="fas fa-folder-open mr-2"></i>Browse Files
+                        </button>
+                    </div>
+                    <p class="text-sm text-secondary-color">
+                        <i class="fas fa-lightbulb mr-1 accent-color"></i>
+                        Tip: Include close-ups of the damage and wider shots showing the affected area
+                    </p>
+                    <div id="photoPreviewContainer" class="flex flex-wrap gap-4 ${formData.photos.length === 0 ? 'hidden' : ''}">
+                        ${formData.photos.map((photo, index) => `
+                            <div class="relative group">
+                                <img src="${photo.preview}" class="photo-preview" alt="Photo ${index + 1}">
+                                <button onclick="removePhoto(${index})" class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs opacity-0 group-hover:opacity-100 transition">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAdditionalInfo() {
+            return `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-medium mb-2">Indoor temperature (if known)</label>
+                            <input type="text" class="input-field" placeholder="e.g., 72°F, 22°C"
+                                value="${formData.temperature}" onchange="formData.temperature = this.value">
+                        </div>
+                        <div>
+                            <label class="block font-medium mb-2">Indoor humidity (if known)</label>
+                            <input type="text" class="input-field" placeholder="e.g., 45%, high, low"
+                                value="${formData.humidity}" onchange="formData.humidity = this.value">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-medium mb-2">Any other concerns or notes?</label>
+                        <textarea class="input-field min-h-[100px]" placeholder="Share any additional information that might be helpful..."
+                            onchange="formData.additionalNotes = this.value">${formData.additionalNotes}</textarea>
+                    </div>
+                    <div class="bg-primary/5 rounded-xl p-4 border border-primary/20">
+                        <h4 class="font-medium flex items-center gap-2 mb-3">
+                            <i class="fas fa-clipboard-list text-primary-color"></i>
+                            Summary of Your Submission
+                        </h4>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div><span class="text-secondary-color">Flooring:</span> ${getFlooringLabel(formData.flooringType) || 'Not specified'}</div>
+                            <div><span class="text-secondary-color">Age:</span> ${formData.floorAge || 'Not specified'}</div>
+                            <div><span class="text-secondary-color">Location:</span> ${formData.location || 'Not specified'}</div>
+                            <div><span class="text-secondary-color">Photos:</span> ${formData.photos.length} uploaded</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectFlooringType(type) {
+            formData.flooringType = type;
+            document.querySelectorAll('.select-option').forEach(el => {
+                el.classList.toggle('selected', el.onclick.toString().includes(type));
+            });
+        }
+
+        function getFlooringLabel(id) {
+            const type = flooringTypes.find(t => t.id === id);
+            return type ? type.label : '';
+        }
+
+        function initPhotoUpload() {
+            const zone = document.getElementById('photoUploadZone');
+            zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+            zone.addEventListener('dragleave', () => { zone.classList.remove('dragover'); });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                addPhotos(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
+            });
+            zone.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) document.getElementById('photoInput').click();
+            });
+        }
+
+        function handlePhotoSelect(event) { addPhotos(Array.from(event.target.files)); }
+
+        function addPhotos(files) {
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    formData.photos.push({ file: file, preview: e.target.result });
+                    updatePhotoPreview();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removePhoto(index) { formData.photos.splice(index, 1); updatePhotoPreview(); }
+
+        function updatePhotoPreview() {
+            const container = document.getElementById('photoPreviewContainer');
+            if (!container) return;
+            container.classList.toggle('hidden', formData.photos.length === 0);
+            container.innerHTML = formData.photos.map((photo, index) => `
+                <div class="relative group">
+                    <img src="${photo.preview}" class="photo-preview" alt="Photo ${index + 1}">
+                    <button onclick="removePhoto(${index})" class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs opacity-0 group-hover:opacity-100 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function prevStep() { if (currentStep > 0) { currentStep--; renderProgress(); renderStep(); } }
+
+        function nextStep() {
+            if (currentStep < totalSteps - 1) { currentStep++; renderProgress(); renderStep(); }
+            else { generateReport(); }
+        }
+
+        async function generateReport() { checkAccessAndGenerate(); }
+
+        // ============================================
+        // API CALL TO VERCEL BACKEND (REPLACES POE)
+        // ============================================
+        async function actuallyGenerateReport() {
+            const prompt = buildPrompt();
+
+            try {
+                // Prepare images as base64
+                const images = [];
+                for (const photo of formData.photos) {
+                    const base64 = photo.preview.split(',')[1];
+                    const mediaType = photo.file.type || 'image/jpeg';
+                    images.push({ data: base64, mediaType: mediaType });
+                }
+
+                // Call our Vercel API endpoint
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, images })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to generate report');
+                }
+
+                const data = await response.json();
+                renderReport(data.content, true);
+
+            } catch (err) {
+                console.error('Report generation error:', err);
+                showError(err.message || 'Failed to generate report');
+            }
+        }
+
+        function buildPrompt() {
+            const progressionMap = {
+                'same': 'Stayed the same',
+                'worse': 'Getting worse',
+                'better': 'Getting better',
+                'varies': 'Varies / changes'
+            };
+
+            return `You are a Residential Flooring Analysis Assistant. Generate a professional, homeowner-friendly flooring condition report based on the following information.
+
+## Homeowner Information:
+- **Flooring type:** ${getFlooringLabel(formData.flooringType) || 'Not specified'}
+- **Approximate age of flooring:** ${formData.floorAge || 'Not specified'}
+- **Room/location(s):** ${formData.location || 'Not specified'}
+- **When the issue was first noticed:** ${formData.issueStart || 'Not specified'}
+- **Progression:** ${progressionMap[formData.progression] || 'Not specified'}
+
+## Description of the problem (homeowner's words):
+${formData.problemDescription || 'Not provided'}
+
+## Recent or Relevant Events:
+- **Water leaks, spills, flooding, or moisture exposure:** ${formData.waterEvents || 'None reported'}
+- **HVAC changes, weather changes, or renovations:** ${formData.weatherChanges || 'None reported'}
+- **Renovations:** ${formData.renovations || 'None reported'}
+
+## Optional Environmental Info:
+- **Indoor temperature:** ${formData.temperature || 'Not provided'}
+- **Indoor humidity:** ${formData.humidity || 'Not provided'}
+
+## Additional Notes:
+${formData.additionalNotes || 'None'}
+
+## Uploaded Photos:
+${formData.photos.length > 0 ? `${formData.photos.length} photo(s) attached showing the flooring conditions.` : 'No photos provided.'}
+
+---
+
+## Instructions:
+Create a beautiful, homeowner-friendly flooring report using this EXACT structure with Markdown formatting:
+
+# 🏠 Flooring Condition Report
+
+## 1. Welcome Summary
+A calm, friendly 2-3 sentence overview of what the homeowner is experiencing and what this report will explain.
+
+## 2. Flooring & Home Overview
+Present the key details in a clear format:
+- **Flooring Type:**
+- **Location(s) Affected:**
+- **Approximate Age:**
+- **Scope of Issue:**
+
+## 3. Homeowner Observations
+A respectful summary of what the homeowner reported, paraphrased professionally.
+
+## 4. Visual Observations from Photos
+${formData.photos.length > 0 ? 'Describe what is visible in the photos - warping, gaps, lifting, cracking, discoloration, unevenness, whether issues appear localized or widespread.' : 'No photos were provided for visual assessment. The observations in this report are based solely on the written description.'}
+
+## 5. Possible Contributing Factors
+Educational explanations written gently covering:
+- Environmental factors
+- Moisture or humidity influences
+- Normal material behavior
+- Household conditions
+
+**Important:** Be educational, not accusatory. Avoid blame.
+
+## 6. Important Notes & Limitations
+Explain that:
+- This report is based on homeowner input and photos
+- It is not a destructive or on-site inspection
+- Additional evaluation may provide more certainty
+
+## 7. Conclusion
+A thoughtful, reassuring summary explaining:
+- The most likely explanation for what is occurring
+- Whether this is common or potentially progressive
+- Why understanding the issue matters
+
+## 8. Recommended Next Steps
+High-level guidance only (NO step-by-step repair instructions):
+- Monitoring recommendations
+- When to consult a professional
+- Documentation suggestions
+
+---
+
+Write in plain, easy-to-understand language. Be reassuring and educational, not alarming. Avoid blame, fault, or legal conclusions.`;
+        }
+
+        function renderReport(content, isComplete) {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('reportScreen').classList.remove('hidden');
+            document.getElementById('headerActions').classList.remove('hidden');
+
+            document.getElementById('reportDate').textContent = new Date().toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            if (formData.photos.length > 0) {
+                document.getElementById('photoGallery').classList.remove('hidden');
+                document.getElementById('galleryImages').innerHTML = formData.photos.map((photo, index) => `
+                    <img src="${photo.preview}" class="photo-preview" alt="Submitted photo ${index + 1}">
+                `).join('');
+            }
+
+            const reportContainer = document.getElementById('reportContent');
+            marked.setOptions({ breaks: true, gfm: true });
+
+            let html = marked.parse(content);
+            html = html.replace(/<h2>/g, '</div><div class="report-section"><h2><i class="fas fa-circle text-xs"></i>');
+            html = '<div class="report-section">' + html + '</div>';
+            html = html.replace('<div class="report-section"></div>', '');
+
+            reportContainer.innerHTML = html;
+            if (isComplete) window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showError(message) {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('errorScreen').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        function retryGeneration() {
+            document.getElementById('errorScreen').classList.add('hidden');
+            generateReport();
+        }
+
+        function startOver() {
+            Object.keys(formData).forEach(key => { formData[key] = key === 'photos' ? [] : ''; });
+            currentStep = 0;
+            hasValidAccess = false;
+            document.getElementById('questionnaireScreen').classList.add('hidden');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('reportScreen').classList.add('hidden');
+            document.getElementById('errorScreen').classList.add('hidden');
+            document.getElementById('headerActions').classList.add('hidden');
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+        }
+
+        // Payment functions
+        function initPaymentConfig() {
+            document.getElementById('priceDisplay').innerHTML = `${PAYMENT_CONFIG.price} <span>per report</span>`;
+            document.getElementById('purchaseLink').href = PAYMENT_CONFIG.purchaseLink;
+        }
+
+        function showPaywall() {
+            document.getElementById('paywallModal').classList.remove('hidden');
+            document.getElementById('accessCodeInput').focus();
+        }
+
+        function closePaywall() {
+            document.getElementById('paywallModal').classList.add('hidden');
+            document.getElementById('codeError').classList.add('hidden');
+            document.getElementById('accessCodeInput').value = '';
+        }
+
+        function validateAccessCode() {
+            const input = document.getElementById('accessCodeInput');
+            const code = input.value.trim().toUpperCase();
+            const errorEl = document.getElementById('codeError');
+
+            if (PAYMENT_CONFIG.validCodes.map(c => c.toUpperCase()).includes(code)) {
+                hasValidAccess = true;
+                closePaywall();
+                proceedToGenerate();
+            } else {
+                errorEl.classList.remove('hidden');
+                input.classList.add('border-red-500');
+                setTimeout(() => input.classList.remove('border-red-500'), 2000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initPaymentConfig();
+            document.getElementById('accessCodeInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') validateAccessCode();
+            });
+        });
+
+        function checkAccessAndGenerate() {
+            if (!PAYMENT_CONFIG.enabled || hasValidAccess) { proceedToGenerate(); return; }
+            showPaywall();
+        }
+
+        function proceedToGenerate() {
+            document.getElementById('questionnaireScreen').classList.add('hidden');
+            document.getElementById('loadingScreen').classList.remove('hidden');
+            actuallyGenerateReport();
+        }
+
+        // Export functions
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+        }
+
+        function canShare() { return navigator.share !== undefined; }
+
+        function updateExportOptions() {
+            const shareOption = document.getElementById('shareOption');
+            const pdfOption = document.getElementById('pdfOption');
+            if (canShare()) shareOption.style.display = 'flex';
+            if (isMobile()) pdfOption.style.display = 'none';
+        }
+
+        async function shareReport() {
+            closeDropdown();
+            const text = document.getElementById('reportContent').innerText;
+            const date = document.getElementById('reportDate').textContent;
+            try {
+                await navigator.share({
+                    title: `Flooring Condition Report - ${date}`,
+                    text: `Flooring Condition Report\nGenerated: ${date}\n\n${text}\n\n---\nGenerated by FloorsIQ`
+                });
+                showToast('Report shared successfully!');
+            } catch (err) {
+                if (err.name !== 'AbortError') showToast('Could not share. Try Copy Text instead.');
+            }
+        }
+
+        function toggleDropdown() {
+            updateExportOptions();
+            document.getElementById('exportDropdown').classList.toggle('show');
+        }
+
+        function closeDropdown() { document.getElementById('exportDropdown').classList.remove('show'); }
+
+        document.addEventListener('click', (e) => { if (!e.target.closest('.dropdown')) closeDropdown(); });
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        async function downloadPDF() {
+            closeDropdown();
+            showToast('Generating PDF...');
+            const clone = document.getElementById('reportScreen').cloneNode(true);
+            clone.querySelector('.no-print')?.remove();
+            clone.style.cssText = 'position:absolute;left:-9999px;background:white;color:#2D3436;padding:40px;width:800px';
+            document.body.appendChild(clone);
+            clone.querySelectorAll('*').forEach(el => {
+                const c = window.getComputedStyle(el).color;
+                if (c === 'rgb(240, 239, 237)' || c.includes('240')) el.style.color = '#2D3436';
+            });
+            try {
+                await html2pdf().set({
+                    margin: [10,10,10,10],
+                    filename: `Flooring-Report-${new Date().toISOString().split('T')[0]}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(clone).save();
+                showToast('PDF downloaded successfully!');
+            } catch (err) {
+                showToast('Failed to generate PDF. Try Print instead.');
+            } finally {
+                document.body.removeChild(clone);
+            }
+        }
+
+        async function copyReportText() {
+            closeDropdown();
+            const text = document.getElementById('reportContent').innerText;
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('Report copied to clipboard!');
+            } catch (err) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.cssText = 'position:fixed;left:-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); showToast('Report copied to clipboard!'); }
+                catch (e) { showToast('Failed to copy. Please try again.'); }
+                document.body.removeChild(ta);
+            }
+        }
+
+        function emailReport() {
+            closeDropdown();
+            const text = document.getElementById('reportContent').innerText;
+            const date = document.getElementById('reportDate').textContent;
+            const subject = encodeURIComponent(`Flooring Condition Report - ${date}`);
+            const body = encodeURIComponent(`Here is your Flooring Condition Report generated on ${date}:\n\n${text}\n\n---\nGenerated by FloorsIQ`);
+            window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+            showToast('Opening email client...');
+        }
+    </script>
+</body>
+</html>
