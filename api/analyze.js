@@ -1,8 +1,4 @@
-export const config = {
-  maxDuration: 60,
-};
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -15,7 +11,6 @@ export default async function handler(req, res) {
 
   try {
     const { prompt, images } = req.body;
-
     const content = [];
 
     if (images && images.length > 0) {
@@ -31,10 +26,7 @@ export default async function handler(req, res) {
       }
     }
 
-    content.push({
-      type: 'text',
-      text: prompt,
-    });
+    content.push({ type: 'text', text: prompt });
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -46,12 +38,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
-        messages: [
-          {
-            role: 'user',
-            content: content,
-          },
-        ],
+        messages: [{ role: 'user', content: content }],
       }),
     });
 
@@ -62,7 +49,6 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-
     const text = data.content
       .filter(block => block.type === 'text')
       .map(block => block.text)
@@ -74,4 +60,4 @@ export default async function handler(req, res) {
     console.error('Server error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
-}
+};
